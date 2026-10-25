@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Cloudflare Tunnel · 内网穿透控制台</title>
+<link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">
+        <svg viewBox="0 0 40 40" width="26" height="26">
+          <path fill="#fff" d="M10 26c-2.2 0-4-1.8-4-4s1.8-4 4-4h.6C11.6 11.2 14.6 9 18 9c4.1 0 7.5 2.9 8.3 6.7 3 .3 5.4 2.8 5.4 5.9 0 2.4-1.6 4.4-3.8 4.9H10z"/>
+          <path fill="currentColor" d="M16 26c0-2.5 1.8-4.4 4-4.4s4 1.9 4 4.4v3h-8v-3z"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <strong>Cloudflare</strong>
+        <span>TUNNEL · WEBUI</span>
+      </div>
+    </div>
+
+    <nav class="nav" id="nav">
+      <button class="nav-item active" data-view="overview"><i>▦</i><span>概览</span></button>
+      <button class="nav-item" data-view="tunnels"><i>⇄</i><span>隧道</span><em id="nav-online" class="badge hidden">0</em></button>
+      <button class="nav-item" data-view="logs"><i>▤</i><span>日志</span></button>
+      <button class="nav-item" data-view="settings"><i>⚙</i><span>设置</span></button>
+    </nav>
+
+    <div class="sidebar-foot">
+      <div class="foot-row"><span class="dot" id="dot-runtime"></span><span>cloudflared</span><b id="foot-version">—</b></div>
+      <div class="foot-row"><span class="dot" id="dot-account"></span><span>Cloudflare 账户</span><b id="foot-account">未登录</b></div>
+      <div class="foot-version">Cloudflare Tunnel WebUI · v1.0.0</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="glow glow-a"></div>
+    <div class="glow glow-b"></div>
+
+    <!-- 概览 -->
+    <section class="view active" id="view-overview">
+      <header class="page-head">
+        <div>
+          <div class="eyebrow">DASHBOARD</div>
+          <h1>概览</h1>
+          <p>通过 Cloudflare 边缘安全访问内网服务，无需公网 IP 与入站端口。</p>
+        </div>
+        <div class="head-actions">
+          <button class="btn ghost" id="btn-refresh">↻ 刷新</button>
+          <button class="btn primary" id="btn-new-tunnel">＋ 新建隧道</button>
+        </div>
+      </header>
+
+      <div id="overview-banner"></div>
+
+      <div class="hero">
+        <div class="hero-text">
+          <div class="hero-status">
+            <span class="pill" id="hero-pill">待连接</span>
+            <span class="tag">CLOUDFLARE EDGE</span>
+          </div>
+          <h2 id="hero-title">内网服务，安全直达公网</h2>
+          <p id="hero-desc">建立出站加密通道，把本地端口映射到托管域名，无需开放任何入站端口。</p>
+          <div class="hero-actions">
+            <button class="btn primary" id="btn-start-all">▶ 启动全部</button>
+            <button class="btn ghost" id="btn-stop-all">■ 全部停止</button>
+          </div>
+        </div>
+        <div class="hero-orb"><span class="orb-ring"></span><span class="orb-core">☁</span></div>
+      </div>
+
+      <div class="stats" id="stats"></div>
+
+      <h3 class="section-title">临时公网测试 <span class="tag faint">无需登录</span></h3>
+      <div class="card quick" id="quick-card"></div>
+
+      <h3 class="section-title">在线隧道</h3>
+      <div id="active-list"></div>
+    </section>
+
+    <!-- 隧道 -->
+    <section class="view" id="view-tunnels">
+      <header class="page-head">
+        <div>
+          <div class="eyebrow">TUNNELS</div>
+          <h1>隧道</h1>
+          <p>管理命名隧道、域名映射与 DNS 指向，配置保存在服务器本机。</p>
+        </div>
+        <div class="head-actions">
+          <button class="btn ghost" id="btn-sync">⇅ 同步云端</button>
+          <button class="btn primary" id="btn-new-tunnel-2">＋ 新建隧道</button>
+        </div>
+      </header>
+      <div id="tunnel-list"></div>
+    </section>
+
+    <!-- 日志 -->
+    <section class="view" id="view-logs">
+      <header class="page-head">
+        <div>
+          <div class="eyebrow">CONSOLE</div>
+          <h1>运行日志</h1>
+          <p>cloudflared 的实时输出，便于排查连接、DNS 与隧道状态。</p>
+        </div>
+      </header>
+      <div class="console card">
+        <div class="console-bar">
+          <select id="log-source" class="select"><option value="all">全部来源</option></select>
+          <label class="switch"><input type="checkbox" id="log-auto" checked /><span>自动滚动</span></label>
+          <span class="spacer"></span>
+          <span class="muted small" id="log-count">0 行</span>
+          <button class="btn tiny ghost" id="log-copy">复制</button>
+          <button class="btn tiny ghost" id="log-clear">清空</button>
+        </div>
+        <div class="console-body" id="console"></div>
+      </div>
+    </section>
+
+    <!-- 设置 -->
+    <section class="view" id="view-settings">
+      <header class="page-head">
+        <div>
+          <div class="eyebrow">PREFERENCES</div>
+          <h1>设置</h1>
+          <p>运行时、Cloudflare 授权与面板外观。</p>
+        </div>
+        <div class="head-actions">
+          <button class="btn ghost" id="btn-theme">◐ 切换主题</button>
+        </div>
+      </header>
+
+      <div class="card setting">
+        <div class="setting-head">
+          <div class="ico">⚡</div>
+          <div><h3>cloudflared 运行时</h3><p>服务器上的隧道客户端</p></div>
+          <span class="pill" id="runtime-pill">检测中</span>
+        </div>
+        <dl class="kv">
+          <dt>版本</dt><dd id="set-version">—</dd>
+          <dt>路径</dt><dd class="mono" id="set-binary">—</dd>
+          <dt>平台</dt><dd id="set-platform">—</dd>
+          <dt>数据目录</dt><dd class="mono" id="set-data">—</dd>
+        </dl>
+        <div class="row-gap">
+          <button class="btn primary" id="btn-install">下载 / 安装运行时</button>
+          <span class="muted small">从 Cloudflare 官方 GitHub Releases 获取对应平台的可执行文件。</span>
+        </div>
+      </div>
+
+      <div class="card setting">
+        <div class="setting-head">
+          <div class="ico">🛡</div>
+          <div><h3>Cloudflare 账户</h3><p>授权证书用于创建命名隧道与写入 DNS</p></div>
+          <span class="pill" id="account-pill">未连接</span>
+        </div>
+        <div class="row-gap">
+          <button class="btn primary" id="btn-login">连接账户</button>
+          <button class="btn ghost" id="btn-logout">退出登录</button>
+          <a class="btn ghost" href="https://one.dash.cloudflare.com/" target="_blank" rel="noreferrer">Zero Trust 控制台</a>
+        </div>
+        <p class="muted small">服务器无浏览器时，把面板显示的授权链接复制到任意设备打开并完成选择域名即可。</p>
+      </div>
+
+      <div class="card setting">
+        <div class="setting-head">
+          <div class="ico">ⓘ</div>
+          <div><h3>接口与安全</h3><p>面板所有操作均通过带令牌的 HTTP 接口</p></div>
+        </div>
+        <p class="muted small">
+          所有 <code>/api/*</code> 请求需要 <code>X-Auth-Token</code> 或会话 Cookie。
+          请只在可信网络暴露端口，或前置 HTTPS 反向代理；令牌保存在数据目录的 <code>token</code> 文件中。
+        </p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- 弹窗 -->
+<div class="modal" id="modal">
+  <div class="modal-mask" data-close></div>
+  <div class="modal-box" role="dialog" aria-modal="true">
+    <header><h3 id="modal-title">标题</h3><button class="x" data-close>✕</button></header>
+    <div class="modal-body" id="modal-body"></div>
+    <footer><span class="err" id="modal-error"></span><button class="btn ghost" data-close>取消</button><button class="btn primary" id="modal-ok">确定</button></footer>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

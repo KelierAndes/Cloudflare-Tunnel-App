@@ -1,0 +1,42 @@
+diff --git a/cmd/cloudflared/main.go b/cmd/cloudflared/main.go
+index e6ce73f..cd8f012 100644
+--- a/cmd/cloudflared/main.go
++++ b/cmd/cloudflared/main.go
+@@ -1,7 +1,9 @@
+ package main
+ 
+ import (
++	"context"
+ 	"fmt"
++	"net"
+ 	"os"
+ 	"strings"
+ 	"time"
+@@ -48,9 +50,27 @@ var (
+ 	}
+ )
+ 
++// useEnvDNSServer makes the pure-Go resolver talk to the DNS server named in
++// CF_DNS_SERVER. Android ships no /etc/resolv.conf, and bionic's getaddrinfo
++// cannot answer SRV queries, so edge discovery would otherwise fail.
++func useEnvDNSServer() {
++	server := os.Getenv("CF_DNS_SERVER")
++	if server == "" {
++		return
++	}
++	net.DefaultResolver = &net.Resolver{
++		PreferGo: true,
++		Dial: func(ctx context.Context, network, _ string) (net.Conn, error) {
++			var dialer net.Dialer
++			return dialer.DialContext(ctx, network, server)
++		},
++	}
++}
++
+ func main() {
+ 	// FIXME: TUN-8148: Disable QUIC_GO ECN due to bugs in proper detection if supported
+ 	os.Setenv("QUIC_GO_DISABLE_ECN", "1")
++	useEnvDNSServer()
+ 	metrics.RegisterBuildInfo(BuildType, BuildTime, Version)
+ 	_, _ = maxprocs.Set()
+ 	bInfo := cliutil.GetBuildInfo(BuildType, Version)
