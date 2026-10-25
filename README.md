@@ -144,3 +144,8 @@ Android 构建若从 `dl.google.com` 下载依赖时出现 `Tag mismatch!`，本
 `android/settings.gradle.kts` 与 `android/build.gradle.kts` 中加入公共镜像（阿里云）作为优先源。
 
 更多实现细节见 [DEVELOPMENT.md](DEVELOPMENT.md)。
+
+## 许可证
+
+本项目以 [MIT](LICENSE) 协议开源。随包分发的 `cloudflared` 及 Flutter 依赖遵循各自的许可证，
+详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
