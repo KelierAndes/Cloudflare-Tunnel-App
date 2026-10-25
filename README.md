@@ -1,6 +1,20 @@
 # Cloudflare Tunnel Manager
 
-一个面向 Windows 的 Cloudflare Tunnel 内网穿透桌面客户端。使用 Flutter 构建，把 `cloudflared` 的登录、命名隧道、端口映射、DNS CNAME 与实时日志整合到一个简洁的界面里。
+一套 Cloudflare Tunnel 内网穿透管理客户端：Windows 桌面端（Flutter）、Android 端，以及给无头
+Linux 服务器用的 Web 面板。把 `cloudflared` 的登录、命名隧道、端口映射、DNS CNAME 与实时日志
+整合到可视化界面里。
+
+## 下载
+
+发布包在 [Releases](https://github.com/KelierAndes/Cloudflare-Tunnel-App/releases)：
+
+| 平台 | 文件 |
+| --- | --- |
+| Windows 10/11 x64 | `CloudflareTunnelManager-1.0.0-win64.zip`（解压即用，内置 cloudflared） |
+| Android arm64-v8a | `CloudflareTunnel-1.0.0-arm64-v8a.apk`（主流手机） |
+| Android x86_64 | `CloudflareTunnel-1.0.0-x86_64.apk`（模拟器） |
+| Android 通用 | `CloudflareTunnel-1.0.0-universal.apk` |
+| Linux 服务器 | `cloudflare-tunnel-webui-1.0.0.tar.gz`（解压后 `sudo bash install.sh`） |
 
 ## 功能
 
@@ -78,7 +92,7 @@
 - 同一域名 + 路径不能重复映射；隧道运行中修改映射，需要重启隧道生效。
 - 应用使用出站连接访问 Cloudflare 边缘，无需公网 IP，也无需在路由器开放入站端口。
 - 更新运行时时请先停止所有隧道，否则 Windows 会锁定正在运行的可执行文件。
-- 构建产物仅面向 Windows 10/11 x64。
+- 桌面端面向 Windows 10/11 x64；Linux 服务器走 Web 面板；Android 面向 arm64-v8a / x86_64。
 
 ## 平台支持
 
@@ -107,8 +121,15 @@ flutter build windows --release
 
 ```powershell
 powershell -File scripts\stage_runtime.ps1 -Platform windows   # Windows 构建
-powershell -File scripts\stage_runtime.ps1 -Platform none      # Android 构建（占位，运行时下载）
-bash ./scripts/stage_runtime.sh linux                          # Linux 构建
+powershell -File scripts\stage_runtime.ps1 -Platform none      # Android 构建（占位）
+bash ./scripts/stage_runtime.sh linux                          # Linux 桌面构建
+```
+
+Android 的 cloudflared 需要单独编译（cgo + `CF_DNS_SERVER` 补丁），产物直接写入
+`android/app/src/main/jniLibs/<abi>/libcloudflared.so`：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/build_android_cloudflared.ps1
 ```
 
 产物位于 `build\windows\x64\runner\Release\`。
